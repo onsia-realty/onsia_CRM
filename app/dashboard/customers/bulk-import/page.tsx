@@ -38,31 +38,34 @@ export default function BulkImportPage() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
   // 샘플 엑셀 템플릿 다운로드
-  const downloadTemplate = () => {
-    const ws_data = [
-      ['전화번호', '이름(선택)', '메모(선택)'],
-      ['010-1234-5678', '홍길동', '신규 고객'],
-      ['010-9876-5432', '김철수', ''],
-      ['010-5555-5555', '', '전화 상담 예정'],
-    ];
-    
-    const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, '고객목록');
-    
-    // 컬럼 너비 설정
-    ws['!cols'] = [
-      { wch: 15 }, // 전화번호
-      { wch: 12 }, // 이름
-      { wch: 30 }, // 메모
-    ];
-    
-    XLSX.writeFile(wb, '고객_대량등록_템플릿.xlsx');
-    
-    toast({
-      title: '템플릿 다운로드',
-      description: '엑셀 템플릿이 다운로드되었습니다.',
-    });
+  const downloadTemplate = async () => {
+    try {
+      const response = await fetch('/api/customers/upload/template');
+      if (!response.ok) {
+        throw new Error('Template download failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'customer_template.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: '템플릿 다운로드',
+        description: '엑셀 템플릿이 다운로드되었습니다.',
+      });
+    } catch (error) {
+      toast({
+        title: '오류',
+        description: '템플릿 다운로드에 실패했습니다.',
+        variant: 'destructive',
+      });
+    }
   };
 
   // 파일 선택 처리
@@ -132,7 +135,7 @@ export default function BulkImportPage() {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch('/api/customers/bulk-import', {
+      const response = await fetch('/api/customers/upload', {
         method: 'POST',
         body: formData,
       });

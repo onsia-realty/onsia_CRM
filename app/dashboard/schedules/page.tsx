@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { VisitCalendar } from '@/components/calendar/VisitCalendar';
 
 export default function SchedulesPage() {
-  const [view, setView] = useState('list');
+  const [view, setView] = useState('calendar');
 
   // 임시 데이터
   const schedules = [
@@ -77,8 +78,17 @@ export default function SchedulesPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">방문 일정</h1>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button
+            variant={view === 'calendar' ? 'default' : 'outline'}
+            onClick={() => setView('calendar')}
+          >
             <Calendar className="mr-2 h-4 w-4" /> 캘린더 보기
+          </Button>
+          <Button
+            variant={view === 'list' ? 'default' : 'outline'}
+            onClick={() => setView('list')}
+          >
+            <List className="mr-2 h-4 w-4" /> 목록 보기
           </Button>
           <Button>
             <Plus className="mr-2 h-4 w-4" /> 일정 추가
@@ -86,8 +96,26 @@ export default function SchedulesPage() {
         </div>
       </div>
 
-      {/* 통계 카드 */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* 캘린더 뷰 */}
+      {view === 'calendar' && (
+        <VisitCalendar
+          onVisitClick={(visit) => {
+            console.log('Visit clicked:', visit);
+          }}
+          onDateClick={(date) => {
+            console.log('Date clicked:', date);
+          }}
+          onVisitStatusChange={(visitId, status) => {
+            console.log('Status changed:', visitId, status);
+          }}
+        />
+      )}
+
+      {/* 목록 뷰 */}
+      {view === 'list' && (
+        <>
+          {/* 통계 카드 */}
+          <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">오늘 일정</CardTitle>
@@ -236,6 +264,8 @@ export default function SchedulesPage() {
           </div>
         </TabsContent>
       </Tabs>
+        </>
+      )}
     </div>
   );
 }

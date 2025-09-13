@@ -23,31 +23,32 @@ export default {
         
         const { username, password } = validatedFields.data
         
-        const user = await prisma.user.findUnique({
-          where: { username },
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: username },
+              { name: username }
+            ]
+          },
           select: {
             id: true,
             email: true,
             name: true,
-            password: true,
+            passwordHash: true,
             role: true,
-            isActive: true,
+            approved: true,
           }
         })
-        
-        if (!user || !user.password) {
+
+        if (!user || !user.passwordHash) {
           return null
         }
-        
-        if (user.role === 'PENDING') {
+
+        if (!user.approved) {
           throw new Error('계정 승인 대기 중입니다')
         }
-        
-        if (!user.isActive) {
-          throw new Error('비활성화된 계정입니다')
-        }
-        
-        const passwordMatch = await bcrypt.compare(password, user.password)
+
+        const passwordMatch = await bcrypt.compare(password, user.passwordHash)
         
         if (!passwordMatch) {
           return null
